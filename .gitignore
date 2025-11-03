@@ -1,0 +1,40 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments
+venv/
+*.venv
+env/
+ENV/
+
+# IDE/Editor configuration files
+.vscode/
+.idea/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# --- Project-Specific Ignores ---
+
+# 1. Producer generated data
+Producer/*.csv
+Producer/*.json
+
+# 2. Spark generated data
+/tmp/farm_iot_parquet/
+/home/mostafa/spark_project_data/farm_iot_parquet/
+*.parquet
+
+# 3. Spark Checkpoints (CRITICAL to ignore)
+/tmp/spark_checkpoints/
+/home/mostafa/spark_project_data/checkpoints/
+
+# 4. Kafka Logs (CRITICAL to ignore)
+/home/mostafa/kafka-logs/
+
+# 5. Local log files
+*.log
