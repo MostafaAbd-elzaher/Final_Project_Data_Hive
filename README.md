@@ -69,17 +69,28 @@ mkdir -p /home/mostafa/spark_project_data/farm_iot_parquet/reliability_1h
 
 ### 2. Start Backing Services
 In 3 separate Terminal (or Tabs):
-Start Zookeeper:
+
+**Start Zookeeper:**
 ```
  [Your_Kafka_Path]/bin/zookeeper-server-start.sh [Your_Kafka_Path]/config/zookeeper.properties
 ```
-Start Kafka:``` [Your_Kafka_Path]/bin/kafka-server-start.sh [Your_Kafka_Path]/config/server.properties```
-Start PostgreSQL: (Depends on your OS, e.g., sudo systemctl start postgresql)
-Start InfluxDB: (Depends on your OS, e.g., sudo systemctl start influxdb)
+**Start Kafka:**
+``` [Your_Kafka_Path]/bin/kafka-server-start.sh [Your_Kafka_Path]/config/server.properties```
+
+**Start PostgreSQL:** 
+(Depends on your OS, e.g., 
+```sudo systemctl start postgresql```)
+
+**Start InfluxDB:** 
+(Depends on your OS, e.g., 
+```sudo systemctl start influxdb.``` )
+
 ### 3. Start Collection & Processing Services
 In 2 separate Terminals:
+
 **1. Start Telegraf:** (Must be configured to read from Kafka and write to InfluxDB)
 telegraf --config /your/path/to/telegraf.conf
+
 **2. Start Spark Consumer (The Main Pipeline):** (Ensure you have cleared checkpoints if you are starting fresh)
 ```bash
 # (Make sure you are in the /opt/spark directory or Spark is in your PATH)
@@ -89,6 +100,7 @@ spark-submit \
 --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
 "/your/path/to/Spark_Transformation_v1.0.py"
 ```
+
 ### 4. Start Ingestion & Visualization
 
 **Start Producer:** (Wait for the Spark Consumer to start successfully)
@@ -98,9 +110,16 @@ python3 /your/path/to/IotSystem_Version1.1.py
 **Start Grafana:** (Depends on your OS, e.g., ```sudo systemctl start grafana-server```)
 
 Open **http://localhost:3000** and start building your dashboards.
+
 ## DWH Schema 📊
 The pipeline builds the following Star Schema in PostgreSQL:
-**dim_location (Dimension Table):** Contains location_id, location_name, crop_type, latitude, longitude.
-**fact_sensor_events (Fact Table):** Contains all metrics (e.g., soil_temperature_c) and ML results, linked via location_id.
-**daily_farm_kpis (Aggregate Table):** A daily summary of health scores and grades.
+
+**dim_location (Dimension Table):** 
+Contains location_id, location_name, crop_type, latitude, longitude.
+
+**fact_sensor_events (Fact Table):** 
+Contains all metrics (e.g., soil_temperature_c) and ML results, linked via location_id.
+
+**daily_farm_kpis (Aggregate Table):**
+ A daily summary of health scores and grades.
 farm_dry_sessions (Insight Table): Records the duration of "dry spell" sessions (Sessionization).
