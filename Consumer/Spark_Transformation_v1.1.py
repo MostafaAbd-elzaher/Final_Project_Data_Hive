@@ -12,38 +12,23 @@ from pyspark.sql.types import (
 from pyspark.sql.window import Window as SparkWindow
 import pyspark.sql.functions as F
 from pyspark.sql.pandas.functions import pandas_udf
-from influxdb_client import InfluxDBClient, Point
-from influxdb_client.client.write_api import SYNCHRONOUS
-from datetime import datetime
 # ===========================
 # CONFIG - تعديل حسب الحاجة
 # ===========================
-import os
-
-# استخدام environment variables للإعدادات
-KAFKA_BOOTSTRAP = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:29092')
+KAFKA_BOOTSTRAP = "localhost:9092"
 INPUT_TOPIC = "farmSensors"
 OUTPUT_EVENTS_TOPIC = "farmInsights"   # enriched per-event
 OUTPUT_TRENDS_TOPIC = "farmTrends"     # 5min trend insights
 OUTPUT_KPIS_TOPIC = "farmKpis"         # daily/week KPIs (periodic)
-
-# استخدام مسارات Docker
-DATA_BASE_PATH = "/app/data"
-PARQUET_BASE_PATH = f"{DATA_BASE_PATH}/farm_iot_parquet"
-CHECKPOINT_BASE = f"{DATA_BASE_PATH}/checkpoints/farm_iot_full_pipeline"
+HOME_PATH = "/home/mostafa"
+PARQUET_BASE_PATH = f"{HOME_PATH}/spark_project_data/farm_iot_parquet"
+CHECKPOINT_BASE = f"{HOME_PATH}/spark_project_data/checkpoints/farm_iot_full_pipeline"
 PROCESSING_TRIGGER = "30 seconds"
 
-# استخدام environment variables لـ PostgreSQL
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'postgres')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
-POSTGRES_DB = os.getenv('POSTGRES_DB', 'farm_dwh')
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'spark_user')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'spark_password')
-
-DB_URL = f"jdbc:postgresql://{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+DB_URL = "jdbc:postgresql://localhost:5432/farm_dwh"
 DB_PROPERTIES = {
-    "user": POSTGRES_USER,
-    "password": POSTGRES_PASSWORD,
+    "user": "spark_user",
+    "password": "spark_password",
     "driver": "org.postgresql.Driver"
 }
 KPI_TABLE_NAME = "daily_farm_kpis"
@@ -51,21 +36,6 @@ DIM_LOCATION_TABLE_NAME = "dim_location"
 FACT_TABLE_NAME = "fact_sensor_events"
 SESSIONS_TABLE_NAME = "farm_dry_sessions"
 DIM_DATE_TABLE_NAME = "dim_date" # إضافة: اسم جدول بُعد التاريخ
-
-# InfluxDB Configuration
-INFLUXDB_URL = "http://influxdb:8086"
-INFLUXDB_TOKEN = "my_super_secret_token"
-INFLUXDB_ORG = "my_org"
-INFLUXDB_BUCKET = "iot_bucket"
-
-# Initialize InfluxDB Client
-try:
-    influx_client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
-    influx_write_api = influx_client.write_api(write_options=SYNCHRONOUS)
-    print("✅ InfluxDB client initialized successfully.")
-except Exception as e:
-    print(f"❌ Failed to initialize InfluxDB client: {e}")
-    influx_write_api = None
 # ===========================
 # SCHEMA
 # ===========================
@@ -587,73 +557,6 @@ def write_events_to_sql_batch(batch_df, batch_id):
 # ----------------------------------------------------
 
 
-# ----------------------------------------------------
-# دالة جديدة: إرسال البيانات إلى InfluxDB
-# ----------------------------------------------------
-def write_events_to_influxdb_batch(batch_df, batch_id):
-    """
-    Writes sensor data to InfluxDB for real-time Grafana visualization.
-    """
-    print(f"--- 📊 Writing Batch {batch_id} to InfluxDB ---")
-    
-    if influx_write_api is None:
-        print("--- ⚠️ InfluxDB client not initialized, skipping write ---")
-        return
-    
-    try:
-        # Convert to Pandas for easier iteration
-        pandas_df = batch_df.select(
-            "timestamp",
-            "location",
-            "soil_temperature_c",
-            "air_temperature_c",
-            "soil_humidity_percent",
-            "air_humidity_percent",
-            "soil_ph",
-            "soil_salinity_ds_m",
-            "light_intensity_lux",
-            "water_level_percent",
-            "env_health_score"
-        ).toPandas()
-        
-        # Write each row as a point to InfluxDB
-        points = []
-        for _, row in pandas_df.iterrows():
-            try:
-                # Parse timestamp
-                ts = datetime.fromisoformat(row['timestamp'].replace('Z', '+00:00'))
-                
-                point = Point("sensor_data") \
-                    .tag("location", row['location']) \
-                    .field("air_temperature_c", float(row['air_temperature_c']) if row['air_temperature_c'] is not None else 0.0) \
-                    .field("soil_temperature_c", float(row['soil_temperature_c']) if row['soil_temperature_c'] is not None else 0.0) \
-                    .field("air_humidity_percent", float(row['air_humidity_percent']) if row['air_humidity_percent'] is not None else 0.0) \
-                    .field("soil_humidity_percent", float(row['soil_humidity_percent']) if row['soil_humidity_percent'] is not None else 0.0) \
-                    .field("soil_ph", float(row['soil_ph']) if row['soil_ph'] is not None else 0.0) \
-                    .field("soil_salinity_ds_m", float(row['soil_salinity_ds_m']) if row['soil_salinity_ds_m'] is not None else 0.0) \
-                    .field("light_intensity_lux", float(row['light_intensity_lux']) if row['light_intensity_lux'] is not None else 0.0) \
-                    .field("water_level_percent", float(row['water_level_percent']) if row['water_level_percent'] is not None else 0.0) \
-                    .field("env_health_score", float(row['env_health_score']) if row['env_health_score'] is not None else 0.0) \
-                    .time(ts)
-                
-                points.append(point)
-            except Exception as row_error:
-                print(f"--- ⚠️ Error processing row in batch {batch_id}: {row_error} ---")
-                continue
-        
-        # Write all points to InfluxDB
-        if points:
-            influx_write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
-            print(f"--- ✅ Batch {batch_id}: {len(points)} points written to InfluxDB ---")
-        else:
-            print(f"--- ⚠️ Batch {batch_id}: No valid points to write ---")
-            
-    except Exception as e:
-        print(f"--- 🔥 Error writing Batch {batch_id} to InfluxDB: {e} ---")
-# === نهاية الدالة ===
-# ----------------------------------------------------
-
-
 def write_sessions_to_sql_batch(batch_df, batch_id):
     """
     Writes the aggregated session data (e.g., dry spells)
@@ -748,18 +651,6 @@ events_sql_dwh_q = (
     .start()
 )
 print("✅ Fact Table Sink (Star Schema) started.")
-
-
-# Sink 3c: Enriched events to InfluxDB (for Grafana)
-events_influxdb_q = (
-    events_for_fact
-    .writeStream
-    .outputMode("append")
-    .foreachBatch(write_events_to_influxdb_batch)
-    .option("checkpointLocation", CHECKPOINT_BASE + "/events_to_influxdb")
-    .start()
-)
-print("✅ InfluxDB Sink (for Grafana) started.")
 
 
 # --- 8b) Aggregation-Level Sinks ---
