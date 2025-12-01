@@ -1,0 +1,210 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": null,
+    "title": "Enterprise Farm Dashboard",
+    "tags": ["farm", "environment", "analytics"],
+    "timezone": "browser",
+    "schemaVersion": 37,
+    "version": 1,
+    "refresh": "30s",
+    "templating": {
+      "list": [
+        {
+          "type": "query",
+          "name": "location",
+          "label": "Location",
+          "datasource": "PostgreSQL",
+          "query": "SELECT DISTINCT location_name FROM dim_location;",
+          "multi": true,
+          "includeAll": true,
+          "refresh": 1
+        }
+      ]
+    },
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Average Environmental Health Score",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT date_full AS time, avg_env_health_score_1d AS value FROM daily_farm_kpis WHERE location IN ($location)",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 50, "color": "yellow"},
+                {"value": 70, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "gauge",
+        "title": "Dry Time Percentage",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT window_end AS time, pct_time_dry AS value FROM daily_farm_kpis WHERE location IN ($location) ORDER BY window_end DESC LIMIT 1",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}}
+      },
+      {
+        "type": "graph",
+        "title": "Anomaly Count Per Day",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT date_full AS time, anomaly_count_day AS value FROM daily_farm_kpis WHERE location IN ($location)",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "short"}}
+      },
+      {
+        "type": "bar-chart",
+        "title": "Error Count Per Day",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT date_full AS time, error_count_day AS value FROM daily_farm_kpis WHERE location IN ($location)",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "title": "Farm Health Grades",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT location, farm_health_grade, avg_env_health_score_1d FROM daily_farm_kpis WHERE location IN ($location) ORDER BY avg_env_health_score_1d DESC",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "type": "heatmap",
+        "title": "Soil Moisture Heatmap",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT event_ts AS time, location_id, soil_humidity_percent AS value FROM fact_sensor_events WHERE location_id IN ($location)",
+            "format": "heatmap"
+          }
+        ]
+      },
+      {
+        "type": "scatter",
+        "title": "Temperature vs Humidity",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT air_temperature_c AS x, air_humidity_percent AS y, location_id AS metric FROM fact_sensor_events WHERE location_id IN ($location)",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Light Intensity Trends",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT event_ts AS time, light_intensity_lux AS value FROM fact_sensor_events WHERE location_id IN ($location)",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "type": "gauge",
+        "title": "Water Level Alerts",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT event_ts AS time, water_level_percent AS value FROM fact_sensor_events WHERE location_id IN ($location) ORDER BY event_ts DESC LIMIT 1",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"steps":[{"value":30,"color":"red"},{"value":70,"color":"yellow"},{"value":100,"color":"green"}]}}}
+      },
+      {
+        "type": "pie-chart",
+        "title": "Sensor Uptime & Reliability",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT location_id AS metric, COUNT(*) FILTER (WHERE is_sensor_error=false) AS uptime, COUNT(*) FILTER (WHERE is_sensor_error=true) AS downtime FROM fact_sensor_events GROUP BY location_id",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "title": "Top 5 Locations by Improvement",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT location, avg_env_health_score_1d FROM daily_farm_kpis WHERE location IN ($location) ORDER BY avg_env_health_score_1d DESC LIMIT 5",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "title": "Bottom 5 Locations by Decline",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT location, avg_env_health_score_1d FROM daily_farm_kpis WHERE location IN ($location) ORDER BY avg_env_health_score_1d ASC LIMIT 5",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "type": "scatter",
+        "title": "Salinity vs pH Level",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT soil_salinity_ds_m AS x, soil_ph AS y, location_id AS metric FROM fact_sensor_events WHERE location_id IN ($location)",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Seasonal Analysis",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT season AS time, AVG(avg_env_health_score_1d) AS value FROM daily_farm_kpis WHERE location IN ($location) GROUP BY season ORDER BY season",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Predicted Anomaly Risk (ML Score)",
+        "datasource": "PostgreSQL",
+        "targets": [
+          {
+            "rawSql": "SELECT event_ts AS time, ml_anomaly_score AS value FROM fact_sensor_events WHERE location_id IN ($location)",
+            "format": "time_series"
+          }
+        ]
+      }
+    ]
+  }
+}

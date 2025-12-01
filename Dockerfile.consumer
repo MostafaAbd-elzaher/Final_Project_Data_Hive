@@ -1,0 +1,46 @@
+# Dockerfile for Spark Consumer Service
+FROM apache/spark:3.5.1
+
+# Switch to root to install dependencies
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    netcat-traditional \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Install Python dependencies
+RUN pip install --no-cache-dir \
+    pyspark==3.5.1 \
+    pandas \
+    pyarrow \
+    kafka-python
+
+# Create directori for data and checkpoints
+RUN mkdir -p /app/data/checkpoints \
+    /app/data/delta_lake \
+    /app/data/parquet \
+    && chmod -R 777 /app/data
+
+# Copy Consumer code
+COPY Consumer/ ./Consumer/
+
+# Copy entrypoint script
+COPY docker-entrypoint-consumer.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set environment variables
+ENV SPARK_HOME=/opt/spark
+ENV KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+ENV POSTGRES_HOST=postgres
+ENV POSTGRES_PORT=5432
+ENV POSTGRES_DB=farm_dwh
+ENV POSTGRES_USER=spark_user
+ENV POSTGRES_PASSWORD=spark_password
+
+# Run entrypoint script
+ENTRYPOINT ["/entrypoint.sh"]

@@ -16,3 +16,6 @@ pandas
 
 # Required by Spark for high-performance data transfer to/from Pandas UDFs
 pyarrow
+
+# Required for writing to InfluxDB (for Grafana visualization)
+influxdb-client

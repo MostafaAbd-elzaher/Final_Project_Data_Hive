@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+websockets
+kafka-python
+python-dotenv
+psycopg2-binary
+influxdb-client

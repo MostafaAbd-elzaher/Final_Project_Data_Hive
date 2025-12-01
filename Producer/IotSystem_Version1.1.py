@@ -5,7 +5,9 @@ import math
 from datetime import datetime
 import csv
 import os
-from kafka import KafkaProducer  # --- تعديل Kafka --- : استيراد المكتبة
+from kafka import KafkaProducer
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 
 class GreenhouseSensorSimulator:
@@ -38,8 +40,10 @@ class GreenhouseSensorSimulator:
 
         # --- تعديل Kafka --- : تهيئة الـ Producer عند إنشاء الكائن
         try:
+            # استخدام environment variable أو القيمة الافتراضية
+            kafka_bootstrap = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:29092')
             self.kafka_producer = KafkaProducer(
-                bootstrap_servers=['localhost:9092'],
+                bootstrap_servers=[kafka_bootstrap],
                 value_serializer=lambda v: json.dumps(v).encode('utf-8')
             )
             self.kafka_topic = kafka_topic
@@ -47,6 +51,21 @@ class GreenhouseSensorSimulator:
         except Exception as e:
             print(f"❌ فشل الاتصال بـ Kafka: {e}")
             self.kafka_producer = None
+
+        # --- InfluxDB Setup ---
+        self.influx_url = "http://influxdb:8086"
+        self.influx_token = "my_super_secret_token"
+        self.influx_org = "my_org"
+        self.influx_bucket = "iot_bucket"
+        
+        try:
+            self.influx_client = InfluxDBClient(url=self.influx_url, token=self.influx_token, org=self.influx_org)
+            self.write_api = self.influx_client.write_api(write_options=SYNCHRONOUS)
+            print("✅ InfluxDB connection successful.")
+        except Exception as e:
+            print(f"❌ InfluxDB connection failed: {e}")
+            self.write_api = None
+
 
     # ... (جميع الدوال الأخرى تبقى كما هي بدون تغيير) ...
 
@@ -221,7 +240,8 @@ class GreenhouseSensorSimulator:
             'soil_salinity_ds_m': round(soil_salinity, 2),
             'light_intensity_lux': round(light_intensity, 2),
             'water_level_percent': round(water_level, 2),
-            'location': self.location
+            'location': self.location,
+            'env_health_score': 100 - abs(soil_ph - 7.0) * 12 - soil_salinity * 6
         }
         return sensor_data
 
@@ -292,6 +312,28 @@ class GreenhouseSensorSimulator:
             except Exception as e:
                 print(f"🔥 خطأ أثناء الإرسال إلى Kafka: {e}")
 
+    def send_to_influxdb(self, data):
+        """Send data directly to InfluxDB"""
+        if self.write_api:
+            try:
+                point = Point("sensor_data") \
+                    .tag("location", data['location']) \
+                    .field("air_temperature_c", float(data['air_temperature_c'])) \
+                    .field("soil_temperature_c", float(data['soil_temperature_c'])) \
+                    .field("air_humidity_percent", float(data['air_humidity_percent'])) \
+                    .field("soil_humidity_percent", float(data['soil_humidity_percent'])) \
+                    .field("soil_ph", float(data['soil_ph'])) \
+                    .field("soil_salinity_ds_m", float(data['soil_salinity_ds_m'])) \
+                    .field("light_intensity_lux", float(data['light_intensity_lux'])) \
+                    .field("water_level_percent", float(data['water_level_percent'])) \
+                    .field("env_health_score", float(data['env_health_score'])) \
+                    .time(datetime.fromisoformat(data['timestamp']))
+                
+                self.write_api.write(bucket=self.influx_bucket, org=self.influx_org, record=point)
+                print(f"📊 Sent to InfluxDB Bucket: '{self.influx_bucket}'")
+            except Exception as e:
+                print(f"🔥 InfluxDB Send Error: {e}")
+
     def run_infinite(self, interval_seconds=5):
         """تشغيل المحاكاة بشكل لا نهائي"""
         print("🚀 بدء محاكاة أجهزة الاستشعار...")
@@ -308,6 +350,9 @@ class GreenhouseSensorSimulator:
                 self.save_to_json(sensor_data)
                 # --- تعديل Kafka --- : استدعاء دالة الإرسال إلى Kafka
                 self.send_to_kafka(sensor_data)
+                
+                # Send to InfluxDB
+                self.send_to_influxdb(sensor_data)
                 print(f"\n📊 القراءة رقم: {reading_count} | الوقت: {datetime.now().strftime('%H:%M:%S')}")
                 print(f"💾 تم حفظ البيانات | التالية خلال {interval_seconds} ثوان...")
                 print("="*80)
@@ -317,6 +362,9 @@ class GreenhouseSensorSimulator:
             if self.kafka_producer:  # --- تعديل Kafka --- : إغلاق الاتصال عند إيقاف التشغيل
                 self.kafka_producer.close()
                 print("🔒 تم إغلاق الاتصال بـ Kafka.")
+            if self.write_api:
+                self.influx_client.close()
+                print("🔒 InfluxDB connection closed.")
             print(f"✅ إجمالي القراءات: {reading_count}")
             print("📁 البيانات محفوظة في:")
             print(f"  - {self.csv_filename}")
@@ -327,8 +375,8 @@ def main():
 
     print("🌱 مرحباً بك في محاكي أجهزة الاستشعار للصوبة الزراعية")
     print("="*60)
-    # Use a save path that exists in the workspace (Producer folder)
-    save_path = r"/mnt/E/MyCareer/DepiData/DataHive/FinalProject/Producer"
+    # استخدام environment variable للمسار أو القيمة الافتراضية
+    save_path = os.getenv('OUTPUT_DIR', '.')
     # --- تعديل Kafka --- : تحديد اسم الـ Topic
     kafka_topic_name = 'farmSensors'
 
@@ -338,6 +386,7 @@ def main():
         kafka_topic=kafka_topic_name
     )
     simulator.run_infinite(interval_seconds=5)
+
 
 
 if __name__ == "__main__":
