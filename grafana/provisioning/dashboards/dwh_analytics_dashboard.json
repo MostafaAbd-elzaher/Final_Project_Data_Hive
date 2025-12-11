@@ -1,0 +1,408 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 2,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": {"legend": false, "tooltip": false, "viz": false}, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "auto", "spanNulls": true, "stacking": {"group": "A", "mode": "none"}, "thresholdsStyle": {"mode": "off"}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 80}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT event_ts AS time, soil_temperature_c AS soil_temp, air_temperature_c AS air_temp FROM fact_sensor_events WHERE event_ts > NOW() - INTERVAL '24 hours' ORDER BY event_ts",
+          "refId": "A"
+        }
+      ],
+      "title": "Temperature Trends (Last 24h)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": {"legend": false, "tooltip": false, "viz": false}, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "auto", "spanNulls": true, "stacking": {"group": "A", "mode": "none"}, "thresholdsStyle": {"mode": "off"}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 2,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT event_ts AS time, soil_humidity_percent, air_humidity_percent FROM fact_sensor_events WHERE event_ts > NOW() - INTERVAL '24 hours' ORDER BY event_ts",
+          "refId": "A"
+        }
+      ],
+      "title": "Humidity Trends (Last 24h)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "value"},
+          "custom": {"hideFrom": {"legend": false, "tooltip": false, "viz": false}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 50}, {"color": "red", "value": 80}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+      "id": 3,
+      "options": {"orientation": "auto", "reduceOptions": {"values": false, "fields": "", "calcs": ["lastNotNull"]}, "showThresholdLabels": false, "showThresholdMarkers": true},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as total_events FROM fact_sensor_events",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Sensor Events",
+      "type": "gauge"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "value"},
+          "custom": {"hideFrom": {"legend": false, "tooltip": false, "viz": false}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 20}, {"color": "red", "value": 50}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+      "id": 4,
+      "options": {"orientation": "auto", "reduceOptions": {"values": false, "fields": "", "calcs": ["lastNotNull"]}, "showThresholdLabels": false, "showThresholdMarkers": true},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as error_count FROM fact_sensor_events WHERE is_sensor_error = true",
+          "refId": "A"
+        }
+      ],
+      "title": "Sensor Errors",
+      "type": "gauge"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "value"},
+          "custom": {"hideFrom": {"legend": false, "tooltip": false, "viz": false}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 50}, {"color": "green", "value": 75}]},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+      "id": 5,
+      "options": {"orientation": "auto", "reduceOptions": {"values": false, "fields": "", "calcs": ["lastNotNull"]}, "showThresholdLabels": false, "showThresholdMarkers": true},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT ROUND(CAST(AVG(env_health_score) AS NUMERIC), 2)::text as health_score FROM fact_sensor_events",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Environmental Health Score",
+      "type": "gauge"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "value"},
+          "custom": {"hideFrom": {"legend": false, "tooltip": false, "viz": false}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 30}, {"color": "red", "value": 60}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+      "id": 6,
+      "options": {"orientation": "auto", "reduceOptions": {"values": false, "fields": "", "calcs": ["lastNotNull"]}, "showThresholdLabels": false, "showThresholdMarkers": true},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT location_id) as locations FROM fact_sensor_events",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Locations",
+      "type": "gauge"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "displayMode": "auto"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "id": 7,
+      "options": {"showHeader": true},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT event_ts, location_id, soil_temperature_c, soil_humidity_percent, air_temperature_c, air_humidity_percent, light_intensity_lux, water_level_percent FROM fact_sensor_events ORDER BY event_ts DESC LIMIT 50",
+          "refId": "A"
+        }
+      ],
+      "title": "Latest Sensor Events (Last 50)",
+      "type": "table"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "displayMode": "auto"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "id": 8,
+      "options": {"showHeader": true},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT window_end, location_id, ROUND(CAST(avg_env_health_score_1d AS NUMERIC), 2) as health_score, ROUND(CAST(pct_time_dry AS NUMERIC), 2) as pct_dry, anomaly_count_day, error_count_day FROM daily_farm_kpis ORDER BY window_end DESC LIMIT 30",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily KPIs (Last 30 Days)",
+      "type": "table"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": {"legend": false, "tooltip": false, "viz": false}, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "auto", "spanNulls": true, "stacking": {"group": "A", "mode": "none"}, "thresholdsStyle": {"mode": "off"}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "id": 9,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT window_end AS time, anomaly_count_day FROM daily_farm_kpis ORDER BY window_end DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Anomaly Count Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": {"legend": false, "tooltip": false, "viz": false}, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "auto", "spanNulls": true, "stacking": {"group": "A", "mode": "none"}, "thresholdsStyle": {"mode": "off"}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+      "id": 10,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT window_end AS time, error_count_day FROM daily_farm_kpis ORDER BY window_end DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Error Count Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": {"legend": false, "tooltip": false, "viz": false}, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "auto", "spanNulls": true, "stacking": {"group": "A", "mode": "none"}, "thresholdsStyle": {"mode": "off"}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28},
+      "id": 11,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT event_ts AS time, light_intensity_lux FROM fact_sensor_events WHERE event_ts > NOW() - INTERVAL '7 days' ORDER BY event_ts",
+          "refId": "A"
+        }
+      ],
+      "title": "Light Intensity Trend (Last 7 Days)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": {"legend": false, "tooltip": false, "viz": false}, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "auto", "spanNulls": true, "stacking": {"group": "A", "mode": "none"}, "thresholdsStyle": {"mode": "off"}},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 36},
+      "id": 12,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT event_ts AS time, water_level_percent FROM fact_sensor_events WHERE event_ts > NOW() - INTERVAL '7 days' ORDER BY event_ts",
+          "refId": "A"
+        }
+      ],
+      "title": "Water Level Trend (Last 7 Days)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "displayMode": "auto"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 44},
+      "id": 13,
+      "options": {"showHeader": true},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT location_id, COUNT(*) as event_count, ROUND(CAST(AVG(soil_temperature_c) AS NUMERIC), 2) as avg_soil_temp, ROUND(CAST(AVG(air_temperature_c) AS NUMERIC), 2) as avg_air_temp FROM fact_sensor_events GROUP BY location_id",
+          "refId": "A"
+        }
+      ],
+      "title": "Location Statistics",
+      "type": "table"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "displayMode": "auto"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 44},
+      "id": 14,
+      "options": {"showHeader": true},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT location_id, COUNT(*) FILTER (WHERE is_sensor_error = true) as error_count, COUNT(*) FILTER (WHERE needs_watering = true) as watering_needed, COUNT(*) FILTER (WHERE possible_overheating = true) as overheating_count FROM fact_sensor_events GROUP BY location_id",
+          "refId": "A"
+        }
+      ],
+      "title": "Location Alerts Summary",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": ["dwh", "analytics", "postgresql", "iot"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Data Warehouse Analytics Dashboard",
+  "uid": "dwh-analytics",
+  "version": 1
+}

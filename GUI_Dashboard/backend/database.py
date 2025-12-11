@@ -1,8 +1,10 @@
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
-
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_db_connection():
     retries = 5
@@ -10,18 +12,21 @@ def get_db_connection():
         try:
             conn = psycopg2.connect(
                 host=os.getenv('POSTGRES_HOST', 'postgres'),
+                port=int(os.getenv('POSTGRES_PORT', 5432)),
                 database=os.getenv('POSTGRES_DB', 'farm_dwh'),
                 user=os.getenv('POSTGRES_USER', 'spark_user'),
                 password=os.getenv('POSTGRES_PASSWORD', 'spark_password')
             )
+            logger.info("✅ Database connection successful")
             return conn
         except Exception as e:
-            print(f"DB Connection Error: {e}")
+            logger.error(f"DB Connection Error: {e}")
             retries -= 1
             if retries > 0:
-                print(f"Retrying in 2 seconds... ({retries} attempts left)")
+                logger.info(f"Retrying in 2 seconds... ({retries} attempts left)")
                 time.sleep(2)
             else:
+                logger.error("Failed to connect to database after all retries")
                 return None
 
 def init_db():
@@ -40,8 +45,10 @@ def init_db():
                 );
             """)
             conn.commit()
-            print("✅ Database initialized.")
+            logger.info("✅ Database initialized.")
         except Exception as e:
-            print(f"DB Init Error: {e}")
+            logger.error(f"DB Init Error: {e}")
         finally:
             conn.close()
+    else:
+        logger.warning("⚠️ Could not initialize database - no connection")

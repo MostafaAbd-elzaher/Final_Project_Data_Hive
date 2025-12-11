@@ -1,103 +1,196 @@
-# End-to-End IoT Data Pipeline Project
+# 🌱 Smart Farm Greenhouse Monitoring and Analysis System
+## Farm IoT Real-time Monitoring & Analytics System
 
-This project is a complete, end-to-end data pipeline that processes streaming data from IoT greenhouse sensors using Apache Spark. The data is cleaned, enriched, and a Star Schema model is built within a Data Warehouse, ready for analysis.
-
-## 🏛️ Architecture
-
-The pipeline consists of the following flow:
-
-1.  **`Producer.py` (Producer):** Simulates IoT sensor data and sends it as JSON to a Kafka Topic (`farmSensors`).
-2.  **`Telegraf` (Monitoring):** Reads the *same* topic (`farmSensors`) and sends the raw data to `InfluxDB` for real-time monitoring.
-3.  **`Spark_Consumer.py` (Processor):**
-    * Reads the stream from `farmSensors`.
-    * **Performs Advanced Transformations:** (Cleaning, Enrichment, Stream-Static Join, Z-Score, ML Anomaly Detection, Sessionization).
-    * **Writes to 4 Sinks:**
-        * **Gold Layer (DWH):** Writes the final tables (`fact_sensor_events`, `daily_farm_kpis`, `farm_dry_sessions`) to `PostgreSQL`.
-        * **Silver Layer (Data Lake):** Archives all processed events (`all_events`) to `Delta Lake`.
-        * **Real-time Topics:** Pushes new insights back to `Kafka` (Topics: `farmInsights`, `farmTrends`, `farmKpis`).
-        * **Monitoring Files:** Writes sensor reliability data (`reliability_1h`) as `Parquet` files.
-4.  **`Grafana` (Visualization):** Connects to `PostgreSQL` (for analytics) and `InfluxDB` (for real-time monitoring) to display dashboards.
-
-
+**An integrated system for monitoring and analyzing sensor data in agricultural greenhouses in real-time**
 
 ---
 
-## 🛠️ Technology Stack
+## 🎯 Project Objective
 
-* **Data Ingestion:** Kafka
-* **Data Processing:** Apache Spark (Structured Streaming)
-* **Data Lake (Silver Layer):** Delta Lake
-* **Data Warehouse (Gold Layer):** PostgreSQL
-* **Real-time Monitoring:** Telegraf & InfluxDB
-* **Data Visualization:** Grafana (or Power BI)
-* **Language:** Python & SQL
-
----
-
-## 📋 Requirements
-
-### 1. Software
-
-All of the following tools must be installed. (For detailed installation steps, see **[SETUP.md](SETUP.md)**).
-* Java (JDK 17 recommended)
-* Apache Spark (v4.0.0 or 4.0.1)
-* Apache Kafka
-* PostgreSQL
-* InfluxDB
-* Telegraf
-* Grafana
-
-### 2. Python Libraries (`requirements.txt`)
-
-These libraries must be installed in the Python environment used by the Producer and the Spark Consumer.
-(See **[requirements.txt](requirements.txt)**)
+Build a comprehensive and integrated system for:
+- ✅ **Simulating sensor data** in agricultural greenhouses (temperature, humidity, salinity, etc.)
+- ✅ **Real-time data processing** using Apache Spark Streaming
+- ✅ **Data cleaning and enhancement** (Cleaning, Enrichment, Anomaly Detection)
+- ✅ **Storing processed data** in a Data Warehouse and Data Lake
+- ✅ **Generating analytics and alerts** (KPIs, Trends, Alerts)
+- ✅ **Visualizing data** through interactive dashboards (Grafana)
 
 ---
 
-## ▶️ How to Run the Full Pipeline
+## 🏛️ System Architecture
 
-To run the project, you must follow this order **strictly** to ensure dependencies are met.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Farm IoT Pipeline Architecture                │
+└─────────────────────────────────────────────────────────────────┘
 
-### 1. (One-Time Setup) Initialize Project Directories
+1️⃣ DATA INGESTION (Ingestion Layer)
+   └─> Producer (IotSystem_Version1.1.py)
+       • Simulating data from 8 sensor devices
+       • Generating JSON messages
+       • Sending to Kafka Topic: "farmSensors"
+       • Saving locally in CSV and JSON
 
-Ensure the directories for Spark's output exist:
+2️⃣ DATA STREAMING (Processing Layer)
+   └─> Spark Structured Streaming (Spark_Transformation_v1.1.py)
+       • Reading data from Kafka
+       • Cleaning and enrichment
+       • Anomaly Detection (Z-Score)
+       • Computing environmental health scores
+       • Data aggregation (Windowing)
 
+3️⃣ DATA STORAGE (Storage Layer)
+   ├─> Gold Layer (Final Data Warehouse)
+   │   └─ PostgreSQL Database
+   │       • Fact Tables: fact_sensor_events
+   │       • Dimension Tables: dim_location, dim_date
+   │       • Aggregates: daily_farm_kpis
+   │
+   ├─> Silver Layer (Data Lake)
+   │   └─ Delta Lake
+   │       • All processed events
+   │       • Data backup
+   │
+   └─> Message Brokers (Kafka Topics)
+       • farmInsights (Detailed events)
+       • farmTrends (5-minute trends)
+       • farmKpis (Daily KPIs)
+
+4️⃣ DATA VISUALIZATION (Presentation Layer)
+   ├─> Grafana Dashboards
+   │   └─ Connected to PostgreSQL and InfluxDB
+   │       • Real-time dashboards
+   │       • Interactive charts
+   │       • Automatic alerts
+   │
+   └─> REST API (FastAPI)
+       └─ Backend Dashboard
+           • Serving data via HTTP
+           • WebSocket for instant updates
+```
+
+---
+
+## 🛠️ Tools and Technologies Used
+
+### Backend Technologies
+| Technology | Version | Function |
+|---------|--------|--------|
+| **Apache Kafka** | 7.5.0 | Message Broker |
+| **Apache Spark** | 4.0.0 | Distributed Stream Processing |
+| **Python** | 3.10+ | Main Programming Language |
+| **PostgreSQL** | 15 | Data Warehouse |
+| **InfluxDB** | 2.7 | Time-Series Database |
+| **Delta Lake** | 3.0.0 | Data Lake Storage |
+
+### Frontend Technologies
+| Technology | Version | Function |
+|---------|--------|--------|
+| **Grafana** | 10.0.0 | Data Visualization |
+| **FastAPI** | Latest | REST API Backend |
+| **React** | Latest | Frontend Dashboard |
+
+### Infrastructure
+| Tool | Version | Function |
+|------|--------|--------|
+| **Docker** | 20.10+ | Container Management |
+| **Docker Compose** | 1.29+ | Service Orchestration |
+| **Zookeeper** | 7.5.0 | Service Coordination |
+
+---
+
+## 📊 Data Processing
+
+### Data Sources
+- **8 simulated sensor devices** measuring:
+  - 🌡️ Soil and air temperature
+  - 💧 Soil and air humidity
+  - ⚗️ Soil acidity (pH)
+  - 🧂 Soil salinity
+  - ☀️ Light intensity
+  - 🚰 Water level
+
+### Data Processing
+- ✅ **Data Cleaning** (Filtering & Validation)
+- ✅ **Anomaly Detection** (Z-Score Outlier Detection)
+- ✅ **Windowed Aggregations**
+- ✅ **Environmental Health Scores**
+- ✅ **Trend Analysis** (5 min rolling windows)
+- ✅ **Daily KPIs**
+
+### Outputs
+- 📊 **Fact Tables** in PostgreSQL
+- 🗂️ **Data Lake** in Delta Lake (Parquet)
+- 📨 **Kafka Topics** for real-time processing
+- 📈 **Grafana Dashboards** for visualization
+
+---
+
+## 🚀 Quick Start
+
+### Requirements
+- Docker and Docker Compose installed
+- Linux (Ubuntu 20.04+) or WSL
+- 8GB RAM and 20GB storage space
+
+### Steps
 ```bash
-mkdir -p /home/mostafa/spark_project_data/farm_iot_parquet/delta_lake/all_events
-mkdir -p /home/mostafa/spark_project_data/farm_iot_parquet/reliability_1h
+# 1. Clone the project
+git clone https://github.com/MostafaAbd-elzaher/Final_Project_Data_Hive.git
+cd FinalProject
+
+# 2. Verify compatibility
+./verify_linux_compatibility.sh
+
+# 3. Interactive quick start
+./QUICK_START_LINUX.sh
+
+# Or manual start:
+./start_system.sh
+
+# 4. Access services
+# Grafana: http://localhost:3001 (admin/admin)
+# Backend: http://localhost:8000
+# Frontend: http://localhost:3000
 ```
 
-### 2. Start Backing Services
-In 3 separate Terminal (or Tabs):
+---
 
-**Start Zookeeper:**
-```
- [Your_Kafka_Path]/bin/zookeeper-server-start.sh [Your_Kafka_Path]/config/zookeeper.properties
-```
-**Start Kafka:**
-``` [Your_Kafka_Path]/bin/kafka-server-start.sh [Your_Kafka_Path]/config/server.properties```
+## 📚 Main Files
 
-**Start PostgreSQL:** 
-(Depends on your OS, e.g., 
-```sudo systemctl start postgresql```)
+| File | Description |
+|------|------|
+| `Producer/IotSystem_Version1.1.py` | Sensor simulator |
+| `Consumer/Spark_Transformation_v1.1.py` | Data processor (Spark Pipeline) |
+| `GUI_Dashboard/backend/main.py` | REST API (FastAPI) |
+| `GUI_Dashboard/backend/database.py` | Database connections |
+| `GUI_Dashboard/backend/kafka_consumer.py` | Kafka reader |
+| `README_LINUX.md` | Detailed Linux guide |
+| `SETUP.md` | Detailed installation guide |
+| `RUN.md` | Running guide |
 
-**Start InfluxDB:** 
-(Depends on your OS, e.g., 
-```sudo systemctl start influxdb.``` )
+---
 
-### 3. Start Collection & Processing Services
-In 2 separate Terminals:
+## 🔗 Important Links
 
-**1. Start Telegraf:** (Must be configured to read from Kafka and write to InfluxDB)
-telegraf --config /your/path/to/telegraf.conf
+- 📖 [Installation Guide](SETUP.md)
+- ▶️ [Running Guide](RUN.md)
+- 🐧 [Linux Guide](README_LINUX.md)
+- 📋 [Changes Summary](LINUX_MODIFICATIONS_SUMMARY.md)
+- ✅ [Completion Status](COMPLETED_LINUX_MIGRATION.md)
 
-**2. Start Spark Consumer (The Main Pipeline):** (Ensure you have cleared checkpoints if you are starting fresh)
-```bash
-# (Make sure you are in the /opt/spark directory or Spark is in your PATH)
-spark-submit \
---packages io.delta:delta-spark_2.13:4.0.0,org.postgresql:postgresql:42.6.0,org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0 \
---conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension \
---conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
+---
+
+## 📞 Support and Help
+
+For more information, refer to the following files:
+- `README_LINUX.md` - Comprehensive Linux running guide
+- `SETUP.md` - Detailed explanation of each installation step
+- `RUN.md` - Running and stopping commands
+
+---
+
+**Last Update:** December 2024 | **Version:** 2.0 (Linux Compatible) | **Status:** ✅ Production Ready
 "/your/path/to/Spark_Transformation_v1.0.py"
 ```
 

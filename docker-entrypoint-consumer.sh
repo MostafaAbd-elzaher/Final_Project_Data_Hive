@@ -7,17 +7,30 @@ echo "==============================================="
 
 # Wait for Kafka to be ready
 echo "⏳ Waiting for Kafka to be ready..."
+max_attempts=30
+attempt=0
 while ! nc -z kafka 29092; do
+  attempt=$((attempt+1))
+  if [ $attempt -ge $max_attempts ]; then
+    echo "❌ Kafka failed to start after $max_attempts attempts"
+    exit 1
+  fi
   sleep 2
-  echo "⏳ Still waiting for Kafka..."
+  echo "⏳ Still waiting for Kafka... (attempt $attempt/$max_attempts)"
 done
 echo "✅ Kafka is ready!"
 
 # Wait for PostgreSQL to be ready
 echo "⏳ Waiting for PostgreSQL to be ready..."
+attempt=0
 while ! nc -z postgres 5432; do
+  attempt=$((attempt+1))
+  if [ $attempt -ge $max_attempts ]; then
+    echo "❌ PostgreSQL failed to start after $max_attempts attempts"
+    exit 1
+  fi
   sleep 2
-  echo "⏳ Still waiting for PostgreSQL..."
+  echo "⏳ Still waiting for PostgreSQL... (attempt $attempt/$max_attempts)"
 done
 echo "✅ PostgreSQL is ready!"
 

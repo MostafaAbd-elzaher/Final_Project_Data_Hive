@@ -28,16 +28,18 @@ from pyspark.sql.types import (
 )
 from pyspark.sql.window import Window
 
+import os
+
 # ===========================
 # CONFIG - تعديل حسب الحاجة
 # ===========================
-KAFKA_BOOTSTRAP = "localhost:9092"
+KAFKA_BOOTSTRAP = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:29092')
 INPUT_TOPIC = "farmSensors"
 OUTPUT_EVENTS_TOPIC = "farmInsights"   # enriched per-event
 OUTPUT_TRENDS_TOPIC = "farmTrends"     # 5min trend insights
 OUTPUT_KPIS_TOPIC = "farmKpis"         # daily/week KPIs (periodic)
-HOME_PATH = "/home/mostafa"
-PARQUET_BASE_PATH = f"{HOME_PATH}/spark_project_data/farm_iot_parquet"
+HOME_PATH = os.getenv('HOME', '/root')
+PARQUET_BASE_PATH = os.getenv('PARQUET_BASE_PATH', f"{HOME_PATH}/spark_project_data/farm_iot_parquet")
 CHECKPOINT_BASE = f"{HOME_PATH}/spark_project_data/checkpoints/farm_iot_full_pipeline"
 PROCESSING_TRIGGER = "30 seconds"
 
@@ -376,10 +378,10 @@ events_lake_q = (
 # --- 8a) تعريفات الـ SQL Data Warehouse (الطبقة الذهبية) ---
 # (قم بتعديل هذه القيم لـ SQL Server أو PostgreSQL أو MySQL)
 
-DB_URL = "jdbc:postgresql://localhost:5432/farm_dwh"  # مثال لـ PostgreSQL
+DB_URL = os.getenv('DB_URL', 'jdbc:postgresql://postgres:5432/farm_dwh')  # مثال لـ PostgreSQL
 DB_PROPERTIES = {
-    "user": "spark_user",              # اسم مستخدم قاعدة البيانات
-    "password": "spark_password",      # كلمة المرور
+    "user": os.getenv('POSTGRES_USER', 'spark_user'),              # اسم مستخدم قاعدة البيانات
+    "password": os.getenv('POSTGRES_PASSWORD', 'spark_password'),      # كلمة المرور
     "driver": "org.postgresql.Driver"  # الـ Driver class
 }
 KPI_TABLE_NAME = "daily_farm_kpis"      # اسم الجدول الذي سيتم إنشاؤه/الكتابة فيه

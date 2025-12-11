@@ -15,6 +15,8 @@ class GreenhouseSensorSimulator:
         self.location = location
         self.output_dir = output_dir
 
+        # Expand path for Linux compatibility
+        self.output_dir = os.path.expanduser(self.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
         
         base_filename = f"greenhouse_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -38,7 +40,7 @@ class GreenhouseSensorSimulator:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
-        # --- تعديل Kafka --- : تهيئة الـ Producer عند إنشاء الكائن
+        
         try:
             # استخدام environment variable أو القيمة الافتراضية
             kafka_bootstrap = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:29092')
@@ -53,10 +55,10 @@ class GreenhouseSensorSimulator:
             self.kafka_producer = None
 
         # --- InfluxDB Setup ---
-        self.influx_url = "http://influxdb:8086"
-        self.influx_token = "my_super_secret_token"
-        self.influx_org = "my_org"
-        self.influx_bucket = "iot_bucket"
+        self.influx_url = os.getenv('INFLUX_URL', 'http://influxdb:8086')
+        self.influx_token = os.getenv('INFLUX_TOKEN', 'my_super_secret_token')
+        self.influx_org = os.getenv('INFLUX_ORG', 'my_org')
+        self.influx_bucket = os.getenv('INFLUX_BUCKET', 'iot_bucket')
         
         try:
             self.influx_client = InfluxDBClient(url=self.influx_url, token=self.influx_token, org=self.influx_org)
@@ -67,7 +69,7 @@ class GreenhouseSensorSimulator:
             self.write_api = None
 
 
-    # ... (جميع الدوال الأخرى تبقى كما هي بدون تغيير) ...
+
 
     def get_season_and_period(self, dt):
         """تحديد الفصل وفترة اليوم بناءً على التاريخ والوقت"""
@@ -302,7 +304,7 @@ class GreenhouseSensorSimulator:
             for alert in alerts:
                 print(alert)
 
-    # --- تعديل Kafka --- : دالة جديدة لإرسال البيانات إلى Kafka
+
     def send_to_kafka(self, data):
         if self.kafka_producer:
             try:
@@ -348,7 +350,6 @@ class GreenhouseSensorSimulator:
                 self.display_data(sensor_data)
                 self.save_to_csv(sensor_data)
                 self.save_to_json(sensor_data)
-                # --- تعديل Kafka --- : استدعاء دالة الإرسال إلى Kafka
                 self.send_to_kafka(sensor_data)
                 
                 # Send to InfluxDB
@@ -359,7 +360,7 @@ class GreenhouseSensorSimulator:
                 time.sleep(interval_seconds)
         except KeyboardInterrupt:
             print("\n\n⏹️ تم إيقاف المحاكاة بواسطة المستخدم")
-            if self.kafka_producer:  # --- تعديل Kafka --- : إغلاق الاتصال عند إيقاف التشغيل
+            if self.kafka_producer: 
                 self.kafka_producer.close()
                 print("🔒 تم إغلاق الاتصال بـ Kafka.")
             if self.write_api:
@@ -377,11 +378,13 @@ def main():
     print("="*60)
     # استخدام environment variable للمسار أو القيمة الافتراضية
     save_path = os.getenv('OUTPUT_DIR', '.')
-    # --- تعديل Kafka --- : تحديد اسم الـ Topic
     kafka_topic_name = 'farmSensors'
+    # الموقع يمكن تحديده عبر متغير البيئة `PRODUCER_LOCATION`،
+    # وإلا سنستخدم الموقع الجديد الذي أضفناه إلى القاعدة (Monufia Agricultural Field)
+    producer_location = os.getenv('PRODUCER_LOCATION') or 'Monufia Agricultural Field'
 
     simulator = GreenhouseSensorSimulator(
-        location="القاهرة، مصر",
+        location=producer_location,
         output_dir=save_path,
         kafka_topic=kafka_topic_name
     )

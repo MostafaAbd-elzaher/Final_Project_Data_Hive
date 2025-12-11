@@ -4,8 +4,13 @@ from pydantic import BaseModel
 import asyncio
 import json
 import os
+import logging
 from kafka_consumer import consume_messages
 from database import get_db_connection, init_db
+
+# Configure logging for Linux
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Farm IoT Dashboard")
 

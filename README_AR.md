@@ -1,139 +1,139 @@
-# 🌱 مشروع Farm IoT Dashboard - دليل التشغيل السريع
+# 🌱 Farm IoT Dashboard Project - Quick Start Guide
 
-## 📋 نظرة عامة
-مشروع متكامل لمراقبة وتحليل بيانات المزارع الذكية في الوقت الفعلي باستخدام:
-- **IoT Sensors Simulator** - محاكي أجهزة الاستشعار
-- **Apache Kafka** - نظام الرسائل
-- **Apache Spark** - معالجة البيانات
-- **PostgreSQL** - قاعدة بيانات تحليلية
-- **InfluxDB** - قاعدة بيانات السلاسل الزمنية
-- **Grafana** - لوحات تحكم متقدمة
-- **FastAPI** - واجهة برمجية خلفية
-- **HTML/JS Dashboard** - واجهة مستخدم تفاعلية مع Chatbot
+## 📋 Overview
+A comprehensive project for monitoring and analyzing smart farm data in real-time using:
+- **IoT Sensors Simulator** - IoT sensor simulator
+- **Apache Kafka** - Message queue system
+- **Apache Spark** - Data processing engine
+- **PostgreSQL** - Analytical database
+- **InfluxDB** - Time-series database
+- **Grafana** - Advanced dashboards
+- **FastAPI** - Backend API interface
+- **HTML/JS Dashboard** - Interactive user interface with Chatbot
 
-## 🚀 تشغيل المشروع (طريقة واحدة فقط!)
+## 🚀 Running the Project (One way only!)
 
-### المتطلبات:
-- ✅ Docker Desktop مثبت ومشغل
-- ✅ 8GB RAM على الأقل
-- ✅ 10GB مساحة فارغة
+### Requirements:
+- ✅ Docker Desktop installed and running
+- ✅ At least 8GB RAM
+- ✅ 10GB free disk space
 
-### خطوات التشغيل:
+### Setup Steps:
 
-#### 1️⃣ افتح Command Prompt في مجلد المشروع
+#### 1️⃣ Open Command Prompt in project folder
 ```cmd
 cd d:\DEPI\FINALLLLLLL\Final_Project_Data_Hive-main
 ```
 
-#### 2️⃣ شغل الملف الرئيسي
+#### 2️⃣ Run the main file
 ```cmd
 START_PROJECT.bat
 ```
 
-**هذا كل شيء!** 🎉
+**That's it!** 🎉
 
-الملف سيقوم بـ:
-- ✅ تنظيف أي حاويات قديمة
-- ✅ بناء جميع الصور (Images)
-- ✅ تشغيل جميع الخدمات
-- ✅ فتح لوحة التحكم في المتصفح تلقائياً
+The file will:
+- ✅ Clean up any old containers
+- ✅ Build all images
+- ✅ Run all services
+- ✅ Open the dashboard in the browser automatically
 
-## 🌐 الوصول للخدمات
+## 🌐 Access Services
 
-بعد التشغيل، يمكنك الوصول إلى:
+After running, you can access:
 
-| الخدمة | الرابط | الوصف |
-|--------|--------|-------|
-| **🎨 Dashboard الرئيسي** | http://localhost:3000 | الواجهة الكاملة مع Chatbot |
+| Service | URL | Description |
+|---------|-----|-------------|
+| **🎨 Main Dashboard** | http://localhost:3000 | Full interface with Chatbot |
 | **🔌 Backend API** | http://localhost:8000 | FastAPI Backend |
-| **📈 Grafana** | http://localhost:3001 | لوحات تحكم متقدمة (admin/admin) |
-| **💾 InfluxDB** | http://localhost:8086 | قاعدة البيانات الزمنية |
+| **📈 Grafana** | http://localhost:3001 | Advanced dashboards (admin/admin) |
+| **💾 InfluxDB** | http://localhost:8086 | Time-series database |
 
-## 🤖 استخدام Chatbot
+## 🤖 Using Chatbot
 
-الـ Chatbot موجود في الزاوية السفلية اليمنى من Dashboard الرئيسي.
+The Chatbot is located in the bottom right corner of the main Dashboard.
 
-**أمثلة على الأسئلة:**
-- "ما حالة النظام؟"
-- "كيف الرطوبة؟"
-- "هل نحتاج ري؟"
-- "ما درجة الحرارة؟"
+**Example questions:**
+- "What is the system status?"
+- "How is the humidity?"
+- "Do we need irrigation?"
+- "What is the temperature?"
 
-## 📊 مكونات Dashboard
+## 📊 Dashboard Components
 
-### الصفحة الرئيسية تحتوي على:
-1. **KPI Cards** - مؤشرات الأداء الرئيسية
-2. **Real-time Chart** - رسم بياني مباشر لدرجة الحرارة
-3. **Map** - خريطة مواقع المزارع
-4. **Chatbot** - مساعد ذكي تفاعلي
-5. **Grafana Integration** - زر لفتح Grafana
+### The main page contains:
+1. **KPI Cards** - Key performance indicators
+2. **Real-time Chart** - Live temperature chart
+3. **Map** - Farm location map
+4. **Chatbot** - Interactive smart assistant
+5. **Grafana Integration** - Button to open Grafana
 
-## 🛠️ أوامر مفيدة
+## 🛠️ Useful Commands
 
-### مشاهدة حالة الخدمات:
+### View services status:
 ```cmd
 docker-compose ps
 ```
 
-### مشاهدة السجلات (Logs):
+### View Logs:
 ```cmd
-# كل الخدمات
+# All services
 docker-compose logs -f
 
-# خدمة معينة
+# Specific service
 docker-compose logs -f producer
 docker-compose logs -f spark-consumer
 docker-compose logs -f backend-dashboard
 docker-compose logs -f frontend-dashboard
 ```
 
-### إيقاف المشروع:
+### Stop the project:
 ```cmd
 docker-compose down
 ```
 
-### إيقاف وحذف كل البيانات:
+### Stop and delete all data:
 ```cmd
 docker-compose down -v
 ```
 
-### إعادة بناء خدمة معينة:
+### Rebuild a specific service:
 ```cmd
 docker-compose up -d --build [service-name]
 ```
 
-## 🔧 حل المشاكل
+## 🔧 Troubleshooting
 
-### المشكلة: "Docker is not running"
-**الحل:** شغل Docker Desktop وانتظر حتى يكون جاهز
+### Problem: "Docker is not running"
+**Solution:** Start Docker Desktop and wait until it's ready
 
-### المشكلة: "Port already in use"
-**الحل:** 
+### Problem: "Port already in use"
+**Solution:** 
 ```cmd
-# أوقف الخدمات القديمة
+# Stop old services
 docker-compose down
 
-# أو غير البورت في docker-compose.yml
+# Or change port in docker-compose.yml
 ```
 
-### المشكلة: Dashboard لا يظهر بيانات
-**الحل:**
-1. تأكد أن Producer يعمل: `docker-compose logs -f producer`
-2. تأكد أن Spark Consumer يعمل: `docker-compose logs -f spark-consumer`
-3. انتظر 30-60 ثانية لبدء تدفق البيانات
+### Problem: Dashboard not showing data
+**Solution:**
+1. Verify Producer is running: `docker-compose logs -f producer`
+2. Verify Spark Consumer is running: `docker-compose logs -f spark-consumer`
+3. Wait 30-60 seconds for data flow to start
 
-### المشكلة: Chatbot لا يستجيب
-**الحل:**
-1. تحقق من Backend: http://localhost:8000
-2. شاهد logs: `docker-compose logs -f backend-dashboard`
+### Problem: Chatbot not responding
+**Solution:**
+1. Check Backend: http://localhost:8000
+2. View logs: `docker-compose logs -f backend-dashboard`
 
-## 📁 هيكل المشروع
+## 📁 Project Structure
 
 ```
 Final_Project_Data_Hive-main/
-├── Producer/                    # مولد بيانات IoT
+├── Producer/                    # IoT data generator
 │   └── IotSystem_Version1.1.py
-├── Consumer/                    # معالج Spark
+├── Consumer/                    # Spark processor
 │   └── Spark_Transformation_v1.1.py
 ├── GUI_Dashboard/
 │   ├── backend/                # FastAPI Backend
@@ -145,14 +145,14 @@ Final_Project_Data_Hive-main/
 │       ├── index.html
 │       ├── nginx.conf
 │       └── Dockerfile
-├── grafana/                    # إعدادات Grafana
-├── docker-compose.yml          # تعريف جميع الخدمات
-├── START_PROJECT.bat           # ملف التشغيل الرئيسي ⭐
-└── README_AR.md               # هذا الملف
+├── grafana/                    # Grafana settings
+├── docker-compose.yml          # Services definition
+├── START_PROJECT.bat           # Main startup file ⭐
+└── README_AR.md               # This file
 
 ```
 
-## 🎯 تدفق البيانات
+## 🎯 Data Flow
 
 ```
 IoT Producer → Kafka → Spark Consumer → PostgreSQL + InfluxDB
@@ -162,33 +162,33 @@ IoT Producer → Kafka → Spark Consumer → PostgreSQL + InfluxDB
 Backend API ← Kafka (Real-time) → WebSocket → Frontend Dashboard
 ```
 
-## 📞 الدعم
+## 📞 Support
 
-إذا واجهت أي مشكلة:
-1. تحقق من السجلات: `docker-compose logs -f`
-2. تأكد من تشغيل Docker Desktop
-3. تأكد من توفر المنافذ المطلوبة
-4. جرب إعادة التشغيل: `docker-compose down && START_PROJECT.bat`
+If you encounter any issues:
+1. Check logs: `docker-compose logs -f`
+2. Verify Docker Desktop is running
+3. Ensure required ports are available
+4. Try restarting: `docker-compose down && START_PROJECT.bat`
 
-## 📝 ملاحظات مهمة
+## 📝 Important Notes
 
-- ⚠️ **لا تستخدم** `run_project.bat` أو `LAUNCH_COMPLETE_SYSTEM.bat` - استخدم `START_PROJECT.bat` فقط
-- ⏱️ أول تشغيل قد يستغرق 5-10 دقائق لتحميل الصور
-- 💾 البيانات تُحفظ في Docker Volumes وتبقى بعد إعادة التشغيل
-- 🔄 لحذف كل البيانات والبدء من جديد: `docker-compose down -v`
+- ⚠️ **Do not use** `run_project.bat` or `LAUNCH_COMPLETE_SYSTEM.bat` - use `START_PROJECT.bat` only
+- ⏱️ First run may take 5-10 minutes to load images
+- 💾 Data is saved in Docker Volumes and persists after restart
+- 🔄 To delete all data and start fresh: `docker-compose down -v`
 
-## ✨ المميزات
+## ✨ Features
 
-- ✅ تشغيل بأمر واحد فقط
-- ✅ واجهة عربية كاملة
-- ✅ Chatbot ذكي تفاعلي
-- ✅ بيانات حقيقية في الوقت الفعلي
-- ✅ لوحات تحكم متعددة (Dashboard + Grafana)
-- ✅ معالجة بيانات متقدمة مع Spark
-- ✅ قواعد بيانات متعددة (PostgreSQL + InfluxDB)
+- ✅ Single command startup
+- ✅ Complete interface
+- ✅ Interactive smart chatbot
+- ✅ Real-time data
+- ✅ Multiple dashboards (Dashboard + Grafana)
+- ✅ Advanced data processing with Spark
+- ✅ Multiple databases (PostgreSQL + InfluxDB)
 
 ---
 
-**تم التطوير بواسطة:** Data Hive Team  
-**التاريخ:** نوفمبر 2025  
-**الإصدار:** 2.0
+**Developed by:** Data Hive Team  
+**Date:** November 2025  
+**Version:** 2.0

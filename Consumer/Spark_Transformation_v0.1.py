@@ -29,23 +29,24 @@ from pyspark.sql.types import (
 from pyspark.sql.window import Window as SparkWindow
 import pyspark.sql.functions as F
 from pyspark.sql.pandas.functions import pandas_udf
+import os
 # ===========================
 # CONFIG - تعديل حسب الحاجة
 # ===========================
-KAFKA_BOOTSTRAP = "localhost:9092"
+KAFKA_BOOTSTRAP = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:29092')
 INPUT_TOPIC = "farmSensors"
 OUTPUT_EVENTS_TOPIC = "farmInsights"   # enriched per-event
 OUTPUT_TRENDS_TOPIC = "farmTrends"     # 5min trend insights
 OUTPUT_KPIS_TOPIC = "farmKpis"         # daily/week KPIs (periodic)
-HOME_PATH = "/home/mostafa"
-PARQUET_BASE_PATH = f"{HOME_PATH}/spark_project_data/farm_iot_parquet"
-CHECKPOINT_BASE = f"{HOME_PATH}/spark_project_data/checkpoints/farm_iot_full_pipeline"
+HOME_PATH = os.getenv('HOME', '/root')
+PARQUET_BASE_PATH = os.getenv('PARQUET_BASE_PATH', f"{HOME_PATH}/spark_project_data/farm_iot_parquet")
+CHECKPOINT_BASE = os.getenv('CHECKPOINT_BASE', f"{HOME_PATH}/spark_project_data/checkpoints/farm_iot_full_pipeline")
 PROCESSING_TRIGGER = "30 seconds"
 # (استخدم نفس تعريفات DB_URL و DB_PROPERTIES من الأسفل)
-DB_URL = "jdbc:postgresql://localhost:5432/farm_dwh"
+DB_URL = os.getenv('DB_URL', 'jdbc:postgresql://postgres:5432/farm_dwh')
 DB_PROPERTIES = {
-    "user": "spark_user",
-    "password": "spark_password",
+    "user": os.getenv('POSTGRES_USER', 'spark_user'),
+    "password": os.getenv('POSTGRES_PASSWORD', 'spark_password'),
     "driver": "org.postgresql.Driver"
 }
 KPI_TABLE_NAME = "daily_farm_kpis"      # اسم الجدول الذي سيتم إنشاؤه/الكتابة فيه
