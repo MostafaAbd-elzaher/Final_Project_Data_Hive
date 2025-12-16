@@ -13,7 +13,7 @@ from pyspark.sql.window import Window as SparkWindow
 import pyspark.sql.functions as F
 from pyspark.sql.pandas.functions import pandas_udf
 # ===========================
-# CONFIG - تعديل حسب الحاجة
+# CONFIG 
 # ===========================
 import os
 KAFKA_BOOTSTRAP = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:29092')
@@ -37,7 +37,6 @@ DIM_LOCATION_TABLE_NAME = "dim_location"
 FACT_TABLE_NAME = "fact_sensor_events"
 SESSIONS_TABLE_NAME = "farm_dry_sessions"
 DIM_DATE_TABLE_NAME = "dim_date"
-
 # ===========================
 # SCHEMA
 # ===========================
@@ -71,14 +70,22 @@ spark = (
 )
 spark.sparkContext.setLogLevel("WARN")
 
-print(" Spark session started successfully.")
+print("✅ Spark session started successfully.")
 
 # ===========================
 # 1) Dimension Tables Setup (One-Time)
 # ===========================
 
+# ----------------------------------------------------
+# دالة إعداد جدول KPI في Postgres
+# ----------------------------------------------------
 def setup_kpi_table_schema(spark_session):
-    print(f"---  Setting up KPI table schema for '{KPI_TABLE_NAME}'... ---")
+    """
+    يضمن أن جدول KPI مُنشأ بالـ Schema الصحيح (LowerCase) قبل بدء التدفق.
+    """
+    print(f"--- ⚙️ Setting up KPI table schema for '{KPI_TABLE_NAME}'... ---")
+    
+    
     kpi_temp_schema = StructType([
         StructField("window_start", StringType()),
         StructField("window_end", StringType()),
@@ -92,7 +99,7 @@ def setup_kpi_table_schema(spark_session):
     ])
 
     try:
-
+        
         empty_kpi_df = spark_session.createDataFrame([], kpi_temp_schema)
 
         (empty_kpi_df
@@ -102,9 +109,9 @@ def setup_kpi_table_schema(spark_session):
                mode="overwrite",
                properties=DB_PROPERTIES)
         )
-        print(f"---  Schema for '{KPI_TABLE_NAME}' successfully created/overwritten in DWH. ---")
+        print(f"--- ✅ Schema for '{KPI_TABLE_NAME}' successfully created/overwritten in DWH. ---")
     except Exception as e:
-        print(f"--- Critical Error in KPI Schema Setup: {e} ---")
+        print(f"--- 🔥 Critical Error in KPI Schema Setup: {e} ---")
         raise 
 # ----------------------------------------------------
 
@@ -135,14 +142,14 @@ try:
            mode="overwrite",
            properties=DB_PROPERTIES)
     )
-    print(f"--- Successfully created/overwritten '{DIM_LOCATION_TABLE_NAME}' in DWH. ---")
+    print(f"--- ✅ Successfully created/overwritten '{DIM_LOCATION_TABLE_NAME}' in DWH. ---")
 except Exception as e:
-    print(f"--- Error writing Dimension Table: {e} ---")
+    print(f"--- 🔥 Error writing Dimension Table: {e} ---")
     pass
 
 
 # 1b) dim_date Setup 
-print(f"--- Ensuring structure for Dimension Table '{DIM_DATE_TABLE_NAME}' in DWH... ---")
+print(f"--- 🔄 Ensuring structure for Dimension Table '{DIM_DATE_TABLE_NAME}' in DWH... ---")
 try:
     date_dim_schema = StructType([
         StructField("date_key", IntegerType(), False), # PK: YYYYMMDD
@@ -163,12 +170,13 @@ try:
            mode="append", 
            properties=DB_PROPERTIES)
     )
-    print(f"--- Structure for '{DIM_DATE_TABLE_NAME}' confirmed/created in DWH. ---")
+    print(f"--- ✅ Structure for '{DIM_DATE_TABLE_NAME}' confirmed/created in DWH. ---")
 except Exception as e:
-    print(f"--- Could not ensure {DIM_DATE_TABLE_NAME} structure: {e} ---")
+    print(f"--- ⚠️ Could not ensure {DIM_DATE_TABLE_NAME} structure: {e} ---")
     pass
 
-# 1c) KPI Table Setup
+
+# 1c) KPI Table Setup 
 setup_kpi_table_schema(spark)
 
 
@@ -280,7 +288,7 @@ events_enriched_ml = events_enriched.withColumn(
 # ===========================
 # 3) Fact Table Preparation for Star Schema
 # ===========================
-
+# اشتقاق المفتاح الزمني (Date Key) لجدول الحقائق
 events_for_fact = (
     events_enriched_ml
     .withColumn("date_key", date_format(col("event_ts"), "yyyyMMdd").cast(IntegerType()))
@@ -301,12 +309,12 @@ def update_dim_date_batch(batch_df, batch_id):
     """
     print(f"--- 📅 Processing dim_date update Batch {batch_id} ---")
     try:
-        # Filter out rows with null date_key
+        #  الخطوة الأولى والجوهرية: تصفية السجلات التي يكون فيها المفتاح (date_key) صالحاً
         filtered_dates_df = batch_df.filter(col("date_key").isNotNull()) 
         
-        # 1. Extract the unique dates required for dim_date
+        # 1. استخراج التواريخ الفريدة المطلوبة لـ dim_date
         unique_dates = (
-            filtered_dates_df 
+            filtered_dates_df # استخدام الـ DataFrame المصفى
             .select(
                 col("date_key"), 
                 date_format(col("event_ts"), "yyyy-MM-dd").alias("date_full"),
@@ -320,7 +328,7 @@ def update_dim_date_batch(batch_df, batch_id):
             .distinct()
         )
 
-        # 2. Specify the name of the day of the week (to match the Schema)
+        # 2. تحديد اسم يوم الأسبوع (للتوافق مع الـ Schema)
         unique_dates = unique_dates.withColumn(
             "day_of_week_name", 
             when(col("day_of_week_name") == 1, lit("Sunday"))
@@ -331,7 +339,7 @@ def update_dim_date_batch(batch_df, batch_id):
             .when(col("day_of_week_name") == 6, lit("Friday"))
             .when(col("day_of_week_name") == 7, lit("Saturday"))
         )
-        # 3.Rename columns to ensure lower case letters Postgres
+        # 3. إعادة تسمية الأعمدة لضمان الأحرف الصغيرة في Postgres
         date_dim_final = unique_dates.select(
             col("date_key").alias("date_key"),
             col("date_full").alias("date_full"),
@@ -343,12 +351,12 @@ def update_dim_date_batch(batch_df, batch_id):
             col("day_period").alias("day_period_name")
         )
         
-        
+        # إضافة خاصية JDBC لضمان الـ Commit
         jdbc_properties_commit = DB_PROPERTIES.copy()
         jdbc_properties_commit["v2_mode"] = "true" 
         jdbc_properties_commit["defaultRowCommitMode"] = "External" 
         
-        if filtered_dates_df.count() > 0: 
+        if filtered_dates_df.count() > 0: # التأكد من وجود بيانات صالحة للإدخال بعد التصفية
             (date_dim_final
              .write
              .jdbc(url=DB_URL,
@@ -431,7 +439,7 @@ def write_kpis_to_sql_batch(batch_df, batch_id):
     print(f"--- 🚀 Writing KPI Batch {batch_id} to SQL DWH ({KPI_TABLE_NAME}) ---")
     
     try:
-        
+        # دمج الخصائص الجديدة لضمان الـ Commit
         jdbc_properties_commit = DB_PROPERTIES.copy()
         jdbc_properties_commit["v2_mode"] = "true" 
         jdbc_properties_commit["defaultRowCommitMode"] = "External" 
@@ -446,13 +454,12 @@ def write_kpis_to_sql_batch(batch_df, batch_id):
         )
         print(f"--- ✅ Batch {batch_id} successfully written to {KPI_TABLE_NAME} ---")
     except Exception as e:
-        # ⚠️ هنا ستبقى المشكلة حتى يتم التأكد من تعريف جدول Postgres
         print(f"--- 🔥 Error writing Batch {batch_id} to SQL: {e} ---")
 # === نهاية الدالة ===
 
 
 # ----------------------------------------------------
-# Fact Table
+# الدالة المحدثة لـ Fact Table (تتضمن حساب Z-Score)
 # ----------------------------------------------------
 def write_events_to_sql_batch(batch_df, batch_id):
     """
@@ -462,6 +469,7 @@ def write_events_to_sql_batch(batch_df, batch_id):
     print(f"--- 🚀 Writing Fact Table Batch {batch_id} to SQL DWH ({FACT_TABLE_NAME}) ---")
 
     try:
+        # 1. حساب الإحصائيات (AVG و STDDEV) للدفعة الحالية (كبديل لـ Tumbling Window)
         batch_stats = (
             batch_df
             .groupBy("location")
@@ -473,14 +481,14 @@ def write_events_to_sql_batch(batch_df, batch_id):
             )
         )
         
-        # 2. Join events with batch statistics (Batch-Batch Join)
+        # 2. ربط الأحداث بالإحصائيات المحسوبة داخل الدفعة (Batch-Batch Join)
         events_with_stats = batch_df.join(
             batch_stats,
             on="location",
             how="left"
         ).cache()
 
-        # 3. Z-score (Outlier Flags)
+        # 3. حساب Z-score (Outlier Flags)
         k_temp = 3.0
         k_hum = 3.0
         events_outliers = events_with_stats.withColumn(
@@ -497,16 +505,16 @@ def write_events_to_sql_batch(batch_df, batch_id):
             "is_outlier_hum_z", when(abs(col("z_hum")) > k_hum, lit(1)).otherwise(lit(0))
         )
         
-    
+        # 4. اختيار المفاتيح (Keys) والمقاييس (Measures) فقط والكتابة
         batch_df_filled = events_outliers.fillna(0, subset=["is_outlier_temp_z", "is_outlier_hum_z", "ml_anomaly_score"])
 
         fact_data = batch_df_filled.select(
-            # Foreign Keys
+            # المفاتيح الخارجية (Foreign Keys)
             "event_ts",           
             "location_id",        
             "date_key",           
 
-            # Measures
+            # المقاييس (Measures)
             "soil_temperature_c",
             "air_temperature_c",
             "soil_humidity_percent",
@@ -517,7 +525,7 @@ def write_events_to_sql_batch(batch_df, batch_id):
             "water_level_percent",
             "env_health_score",
             
-            # Metrics/Flags   
+            # مقاييس/أعلام (Metrics/Flags) - يتم حسابها في هذه الدفعة
             "is_outlier_temp_z", 
             "is_outlier_hum_z",  
             "ml_anomaly_score",
@@ -588,9 +596,9 @@ def write_sessions_to_sql_batch(batch_df, batch_id):
 # ===========================
 
 # --- 8a) Event-Level Sinks (Kafka, Delta Lake, DWH Fact Table) ---
+# المصدر: events_for_fact 
 
-# Sink 1: Enriched events to Kafka
-
+# Sink 1: Enriched events to Kafka (بدون Z-Score)
 events_to_kafka = events_for_fact.select( 
     to_json(struct(*[c for c in events_for_fact.columns])).alias("value")
 )
@@ -628,12 +636,12 @@ date_dim_update_q = (
 print("✅ Dimension Date Update Sink started.")
 
 
-# Sink 3b: Enriched events to SQL DWH (Fact Table) 
+# Sink 3b: Enriched events to SQL DWH (Fact Table) - يتضمن Z-Score داخلياً
 events_sql_dwh_q = (
     events_for_fact 
     .writeStream
     .outputMode("append")
-    .foreachBatch(write_events_to_sql_batch) # تحتوي على منطق Z-Score الآن
+    .foreachBatch(write_events_to_sql_batch) 
     .option("checkpointLocation", CHECKPOINT_BASE + "/events_fact_table_sql_dwh_v2")
     .start()
 )
@@ -643,6 +651,7 @@ print("✅ Fact Table Sink (Star Schema) started.")
 # --- 8b) Aggregation-Level Sinks ---
 
 # Sink 4: Trend insights (5m SLIDING) to Kafka
+# (يستخدم events_for_fact)
 agg_5m_sliding = (
     events_for_fact 
     .groupBy(window(col("event_ts"), "5 minutes", "1 minute"), col("location")) 
@@ -697,11 +706,9 @@ kpi_daily_expanded = (
 )
 
 # 2. Rename all columns to lowercase for strict PostgreSQL compatibility
-
 kpi_final_for_dwh = kpi_daily_expanded.select(
     [col(c).alias(c.lower()) for c in kpi_daily_expanded.columns]
 )
-
 kpi_final_for_dwh = kpi_final_for_dwh.select(
     "window_start", "window_end", "location", 
     "avg_env_health_score_1d", "pct_time_dry", 
