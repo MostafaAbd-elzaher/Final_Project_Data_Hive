@@ -15,7 +15,7 @@ class GreenhouseSensorSimulator:
         self.location = location
         self.output_dir = output_dir
 
-        # Expand path for Linux compatibility
+       
         self.output_dir = os.path.expanduser(self.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
         
