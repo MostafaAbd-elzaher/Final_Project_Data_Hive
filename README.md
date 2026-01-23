@@ -4,6 +4,17 @@
 **An integrated system for monitoring and analyzing sensor data in agricultural greenhouses in real-time**
 
 ---
+## 🏆Award-Winning Project:
+Successfully achieved 1st Place in the Data Engineering Track at the Digital Egypt Pioneers Initiative (DEPI) in collaboration with Eyouth.
+
+## 🏗️Project Overview
+Data Hive is a robust, end-to-end Data Pipeline designed to handle complex data workflows. This project demonstrates proficiency in modern data engineering practices, from ingestion to visualization.
+
+## 🌟Key Achievements & Recognition
+Ranked #1: Best project among all participants in the DEPI Data Engineering Track.
+Technical Excellence: Recognized for optimized ETL process design and scalable Data Architecture.
+Professional Implementation: Implemented using industry-standard tools ensuring data integrity and performance.
+---
 
 ## 🎯 Project Objective
 
